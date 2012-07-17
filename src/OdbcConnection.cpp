@@ -120,7 +120,7 @@ namespace mssql
             { 
                 return false; 
             }
-            if (!SQL_SUCCEEDED(ret)) 
+            if (ret != SQL_NO_DATA && !SQL_SUCCEEDED(ret)) 
             { 
                 statement.Throw();  
             }
