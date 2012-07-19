@@ -31,7 +31,7 @@ namespace mssql
         SQLSMALLINT actual;
         if (!SQL_SUCCEEDED(SQLGetDiagRec(handleType, handle, 1, wszSqlState, &nativeError, NULL, 0, &actual)))
         {
-            assert(false);
+            return OdbcException( "No available diagnostic" );
         }
         buffer.resize(actual+1);
         if (!SQL_SUCCEEDED(SQLGetDiagRec(handleType, handle, 1, wszSqlState, &nativeError, buffer.data(), actual+1, &actual)))
