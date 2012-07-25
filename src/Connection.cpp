@@ -2,7 +2,7 @@
 // File: Connection.cpp
 // Contents: C++ interface to Microsoft Driver for Node.js for SQL Server
 // 
-// Copyright Microsoft Corporation
+// Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,9 +40,11 @@ namespace mssql
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "query", Connection::Query);
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "readRow", Connection::ReadRow);
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "readColumn", Connection::ReadColumn);
+        NODE_SET_PROTOTYPE_METHOD(constructor_template, "readRowCount", Connection::ReadRowCount);
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "beginTransaction", Connection::BeginTransaction);
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "commit", Connection::Commit);
         NODE_SET_PROTOTYPE_METHOD(constructor_template, "rollback", Connection::Rollback);
+        NODE_SET_PROTOTYPE_METHOD(constructor_template, "nextResult", Connection::ReadNextResult);
 
         target->Set(String::NewSymbol("Connection"), constructor_template->GetFunction());
 
@@ -150,6 +152,13 @@ namespace mssql
         Connection* connection = Unwrap<Connection>(args.This());
 
         return scope.Close<Value>(connection->innerConnection->ReadNextResult(callback));
+    }
+
+    Handle<Value> Connection::ReadRowCount(const Arguments& args)
+    {
+        Connection* connection = Unwrap<Connection>(args.This());
+
+        return connection->innerConnection->ReadRowCount();
     }
 
     Handle<Value> Connection::Open(const Arguments& args)

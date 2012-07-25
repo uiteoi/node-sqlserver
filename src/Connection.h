@@ -2,7 +2,7 @@
 // File: Connection.h
 // Contents: C++ interface to Microsoft Driver for Node.js for SQL Server
 // 
-// Copyright Microsoft Corporation
+// Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ namespace mssql
         static Handle<Value> ReadRow(const Arguments& args);
         static Handle<Value> ReadColumn(const Arguments& args);
         static Handle<Value> ReadNextResult(const Arguments& args);
+        static Handle<Value> ReadRowCount(const Arguments& args);
     };
 
 }

@@ -2,7 +2,7 @@
 // File: Column.h
 // Contents: Column objects from SQL Server to return as Javascript types
 // 
-// Copyright Microsoft Corporation
+// Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,5 +115,18 @@ namespace mssql
         }
     private:
         double value;
+    };
+
+    class BoolColumn : public Column
+    {
+    public:
+        BoolColumn( bool value) : value(value) {}
+        Handle<Value> ToValue()
+        {
+            HandleScope scope;
+            return scope.Close(Boolean::New(value));
+        }
+    private:
+        bool value;
     };
 }

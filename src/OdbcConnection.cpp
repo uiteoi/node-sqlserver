@@ -2,7 +2,7 @@
 // File: OdbcConnection.cpp
 // Contents: Async calls to ODBC done in background thread
 // 
-// Copyright Microsoft Corporation
+// Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,6 +115,7 @@ namespace mssql
 
         if (executionState == Executing)
         {
+            endOfResults = true;     // reset 
             SQLRETURN ret = SQLExecDirect(statement, const_cast<wchar_t*>(query.c_str()), query.length());
             if (ret == SQL_STILL_EXECUTING) 
             { 
@@ -194,10 +195,11 @@ namespace mssql
             {
                 executionState = FetchRow;
             }
-            else {
-                statement.Free();
-                executionState = Idle;
+            else 
+            {
+                executionState = NextResults;
             }
+            
             return true;
         }
 
@@ -218,14 +220,13 @@ namespace mssql
         }
         if (ret == SQL_NO_DATA) 
         { 
-            resultset->moreRows = false;
-            statement.Free();
-            executionState = Idle;
+            resultset->endOfRows = true;
+            executionState = NextResults;
             return true;
         }
         else 
         {
-            resultset->moreRows = true;
+            resultset->endOfRows = false;
         }
         if (!SQL_SUCCEEDED(ret)) 
         { 
@@ -293,8 +294,29 @@ namespace mssql
                 }
             }
             break;
-        case SQL_SMALLINT:
         case SQL_BIT:
+            {
+                long val;
+                SQLRETURN ret = SQLGetData(statement, column + 1, SQL_C_SLONG, &val, sizeof(val), &strLen_or_IndPtr);
+                if (ret == SQL_STILL_EXECUTING) 
+                { 
+                    return false; 
+                }
+                if (!SQL_SUCCEEDED(ret)) 
+                { 
+                    statement.Throw();  
+                }
+                if (strLen_or_IndPtr == SQL_NULL_DATA) 
+                {
+                    resultset->SetColumn(make_shared<NullColumn>());
+                }
+                else 
+                {
+                    resultset->SetColumn(make_shared<BoolColumn>((val != 0) ? true : false));
+                }
+            }
+            break;
+        case SQL_SMALLINT:
         case SQL_TINYINT:
         case SQL_INTEGER:
             {
@@ -422,32 +444,30 @@ namespace mssql
 
     bool OdbcConnection::TryReadNextResult()
     {
-        if (executionState == FetchRow)
-        {
-
-            SQLRETURN ret = SQLMoreResults(statement);
-            if (ret == SQL_STILL_EXECUTING) 
-            { 
-                return false; 
-            }
-            if (ret == SQL_NO_DATA) 
-            { 
-                resultset->moreRows = false;
-                statement.Free();
-                executionState = Idle;
-                return true;
-            }
-            else 
-            {
-                resultset->moreRows = true;
-            }
-            if (!SQL_SUCCEEDED(ret)) 
-            { 
-                statement.Throw();
-            }
-
-            executionState = CountingColumns;
+        if (executionState != NextResults)
+        {            
+            throw OdbcException("The connection is in an invalid state");
         }
+
+        SQLRETURN ret = SQLMoreResults(statement);
+        if (ret == SQL_STILL_EXECUTING) 
+        { 
+            return false; 
+        }
+        if (ret == SQL_NO_DATA) 
+        { 
+            endOfResults = true;
+            statement.Free();
+            executionState = Idle;
+            return true;
+        }
+        if (!SQL_SUCCEEDED(ret)) 
+        { 
+            statement.Throw();
+        }
+
+        endOfResults = false;
+        executionState = CountingColumns;
 
         return TryExecute(L"");
     }

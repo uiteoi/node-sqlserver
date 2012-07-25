@@ -2,7 +2,7 @@
 // File: OdbcConnection.h
 // Contents: Async calls to ODBC done in background thread
 // 
-// Copyright Microsoft Corporation
+// Copyright Microsoft Corporation and contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,17 +48,21 @@ namespace mssql
             Metadata,
             CountRows,
             FetchRow,
-            FetchColumn
+            FetchColumn,
+            NextResults
         } executionState;
 
         int column;
+        bool endOfResults;
 
     public:
         shared_ptr<ResultSet> resultset;
 
         OdbcConnection()
             : connectionState(Closed),
-              executionState(Idle)
+              executionState(Idle),
+              column(0),
+              endOfResults(true)
         {
         }
 
@@ -79,10 +83,16 @@ namespace mssql
             return scope.Close(resultset->MetaToValue());
         }
 
-        Handle<Value> MoreRows()
+        Handle<Value> EndOfResults()
         {
             HandleScope scope;
-            return scope.Close(Boolean::New(resultset->moreRows));
+            return scope.Close( Boolean::New( endOfResults ));
+        }
+
+        Handle<Value> EndOfRows()
+        {
+            HandleScope scope;
+            return scope.Close(Boolean::New(resultset->EndOfRows()));
         }
 
         Handle<Value> GetColumnValue()
