@@ -45,11 +45,6 @@ namespace mssql
         {
         }
 
-        virtual ~OdbcOperation()
-        {
-            callback.Dispose();
-        }
- 
         virtual bool TryInvokeOdbc() = 0;
         virtual Handle<Value> CreateCompletionArg() = 0;
 
@@ -63,17 +58,11 @@ namespace mssql
         wstring connectionString;
         Persistent<Object> backpointer;
     public:
-        OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, Handle<Object> callback, 
-                      Handle<Object> backpointer)
+        OpenOperation(shared_ptr<OdbcConnection> connection, const wstring& connectionString, Handle<Object> callback, Handle<Object> backpointer)
             : OdbcOperation(connection, callback), 
               connectionString(connectionString), 
               backpointer(Persistent<Object>::New(backpointer))
         {
-        }
-
-        virtual ~OpenOperation( void )
-        {
-            backpointer.Dispose();
         }
 
         bool TryInvokeOdbc() override
@@ -204,32 +193,6 @@ namespace mssql
             return scope.Close( Undefined() );
         }
 
-    };
-
-    class CollectOperation : public OdbcOperation
-    {
-    public:
-        CollectOperation(shared_ptr<OdbcConnection> connection)
-            : OdbcOperation(connection, Handle<Object>())
-        {
-        }
-
-        bool TryInvokeOdbc() override
-        {
-            return connection->TryClose();
-        }
-
-        Handle<Value> CreateCompletionArg() override
-        {
-            assert( false );
-            HandleScope scope;
-            return scope.Close( Undefined() );
-        }
-
-        // override to not call a callback
-        void CompleteForeground() override
-        {
-        }
     };
 
     class BeginTranOperation : public OdbcOperation

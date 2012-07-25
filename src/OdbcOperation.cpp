@@ -64,6 +64,8 @@ namespace mssql
 
             callback->Call(Undefined().As<Object>(), argc, args);
         }
+
+        callback.Dispose();
     }
 
 }

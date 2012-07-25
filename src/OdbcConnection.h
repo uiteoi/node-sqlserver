@@ -20,7 +20,6 @@
 #pragma once
 
 #include "ResultSet.h"
-#include "CriticalSection.h"
 
 namespace mssql
 {
@@ -32,7 +31,6 @@ namespace mssql
         static OdbcEnvironmentHandle environment;
         OdbcConnectionHandle connection;
         OdbcStatementHandle statement;
-        CriticalSection closeCriticalSection;
 
         enum ConnectionStates
         {

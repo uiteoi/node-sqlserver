@@ -38,8 +38,9 @@ namespace mssql
             : innerConnection(new OdbcConnectionBridge())
         {
         }
-
-        virtual ~Connection();
+        ~Connection()
+        {
+        }
 
         static void Initialize(Handle<Object> target);
         static Handle<Value> Close(const Arguments& args);
