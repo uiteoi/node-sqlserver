@@ -8,3 +8,4 @@ ipch
 .*.swp
 *.opensdf
 *.suo
+lib/sqlserver.node
